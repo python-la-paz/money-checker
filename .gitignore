@@ -205,3 +205,14 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+
+uploads/
+logs/
+geoip/
+
+.DS_Store
+*.log
+
+mongodb/
+mongo_data/
