@@ -1,0 +1,22 @@
+services:
+  app:
+    build: .
+    restart: always
+    labels:
+      - traefik.http.routers.${TRAEFIK_ROUTE}.rule=Host(${TRAEFIK_APP_DOMAIN})
+      - traefik.http.routers.${TRAEFIK_ROUTE}.tls=true
+      - traefik.http.routers.${TRAEFIK_ROUTE}.tls.certresolver=lets-encrypt
+      - traefik.port=${TRAEFIK_APP_PORT}
+    env_file:
+      - .env
+    networks:
+      - web
+    expose:
+      - "8000"
+    volumes:
+      - ./uploads:/app/uploads
+      - ./logs:/app/logs
+      - ./geoip:/app/geoip
+networks:
+  web:
+    external: true
