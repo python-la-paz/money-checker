@@ -13,7 +13,7 @@ class Database:
         self.client: AsyncIOMotorClient = None
         self.db: AsyncIOMotorDatabase = None
         self.mongodb_url = os.getenv("MONGODB_URL", "mongodb://localhost:27017")
-        self.database_name = os.getenv("DATABASE_NAME", "bolivianos_photos")
+        self.database_name = os.getenv("DATABASE_NAME", "mydatabase")
     
     async def connect(self):
         """Connect to MongoDB"""

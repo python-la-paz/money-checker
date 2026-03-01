@@ -13,7 +13,7 @@ class Config:
     
     # MongoDB
     MONGODB_URL = os.getenv("MONGODB_URL", "mongodb://localhost:27017")
-    DATABASE_NAME = os.getenv("DATABASE_NAME", "bolivianos_photos")
+    DATABASE_NAME = os.getenv("DATABASE_NAME", "mydatabase")
     
     # Upload
     UPLOAD_DIR = os.getenv("UPLOAD_DIR", "./uploads")

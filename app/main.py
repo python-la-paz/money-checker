@@ -9,7 +9,7 @@ from .database import Database
 from .metadata import MetadataExtractor
 from .logger import logger
 
-app = FastAPI(title="Bolivianos Photo Upload")
+app = FastAPI(title="Verificador de Serie \"B\"", version="1.0.0")
 
 # Initialize database
 db = Database()
