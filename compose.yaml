@@ -17,6 +17,12 @@ services:
       - ./uploads:/app/uploads
       - ./logs:/app/logs
       - ./geoip:/app/geoip
+    # add memory and cpu limits al compose de docker compose maximo 1cpu y 4 gb de ram
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 4G
 networks:
   web:
     external: true

@@ -460,8 +460,8 @@ button {
 }
 
 .camera-frame {
-    width: 80%;
-    max-width: 420px;
+    width: 97%;
+    max-width: 1200px;
     aspect-ratio: 2 / 1;
     border: 3px solid rgba(255, 255, 255, 0.85);
     border-radius: var(--border-radius-sm);

@@ -20,6 +20,7 @@ const cameraCanvas = document.getElementById('cameraCanvas');
 const captureBtn = document.getElementById('captureBtn');
 const closeCameraBtn = document.getElementById('closeCameraBtn');
 const switchCameraBtn = document.getElementById('switchCameraBtn');
+const cameraFrame = document.querySelector('.camera-frame');
 
 let selectedFileData = null;
 let cameraStream = null;
@@ -45,7 +46,7 @@ cameraOption.addEventListener('click', async () => {
 
 cameraInput.addEventListener('change', (e) => {
     if (e.target.files.length > 0) {
-        handleFileSelect(e.target.files[0]);
+        void handleFileSelect(e.target.files[0]);
     }
 });
 
@@ -54,7 +55,7 @@ fileOption.addEventListener('click', () => fileInput.click());
 
 fileInput.addEventListener('change', (e) => {
     if (e.target.files.length > 0) {
-        handleFileSelect(e.target.files[0]);
+        void handleFileSelect(e.target.files[0]);
     }
 });
 
@@ -121,17 +122,84 @@ function closeCameraModal() {
 
 closeCameraBtn.addEventListener('click', closeCameraModal);
 
+function getFrameCropRect() {
+    if (!cameraFrame) return null;
+
+    const videoRect = cameraFeed.getBoundingClientRect();
+    const frameRect = cameraFrame.getBoundingClientRect();
+
+    const displayWidth = videoRect.width;
+    const displayHeight = videoRect.height;
+    const videoWidth = cameraFeed.videoWidth;
+    const videoHeight = cameraFeed.videoHeight;
+
+    if (!videoWidth || !videoHeight || !displayWidth || !displayHeight) {
+        return null;
+    }
+
+    // Map frame from CSS pixels to video pixels (object-fit: cover)
+    const scale = Math.max(displayWidth / videoWidth, displayHeight / videoHeight);
+    const scaledWidth = videoWidth * scale;
+    const scaledHeight = videoHeight * scale;
+    const offsetX = (displayWidth - scaledWidth) / 2;
+    const offsetY = (displayHeight - scaledHeight) / 2;
+
+    const frameX = frameRect.left - videoRect.left;
+    const frameY = frameRect.top - videoRect.top;
+    const frameW = frameRect.width;
+    const frameH = frameRect.height;
+
+    let srcX = (frameX - offsetX) / scale;
+    let srcY = (frameY - offsetY) / scale;
+    let srcW = frameW / scale;
+    let srcH = frameH / scale;
+
+    if (srcX < 0) {
+        srcW += srcX;
+        srcX = 0;
+    }
+    if (srcY < 0) {
+        srcH += srcY;
+        srcY = 0;
+    }
+    if (srcX + srcW > videoWidth) {
+        srcW = videoWidth - srcX;
+    }
+    if (srcY + srcH > videoHeight) {
+        srcH = videoHeight - srcY;
+    }
+
+    return { x: srcX, y: srcY, width: srcW, height: srcH };
+}
+
 captureBtn.addEventListener('click', () => {
     if (!isCameraActive) return;
 
     const context = cameraCanvas.getContext('2d');
-    cameraCanvas.width = cameraFeed.videoWidth;
-    cameraCanvas.height = cameraFeed.videoHeight;
-    context.drawImage(cameraFeed, 0, 0);
+    const crop = getFrameCropRect();
+    if (crop && crop.width > 0 && crop.height > 0) {
+        cameraCanvas.width = Math.round(crop.width);
+        cameraCanvas.height = Math.round(crop.height);
+        context.drawImage(
+            cameraFeed,
+            crop.x,
+            crop.y,
+            crop.width,
+            crop.height,
+            0,
+            0,
+            cameraCanvas.width,
+            cameraCanvas.height
+        );
+    } else {
+        cameraCanvas.width = cameraFeed.videoWidth;
+        cameraCanvas.height = cameraFeed.videoHeight;
+        context.drawImage(cameraFeed, 0, 0);
+    }
 
     cameraCanvas.toBlob((blob) => {
         const file = new File([blob], `camera-${Date.now()}.jpg`, { type: 'image/jpeg' });
-        handleFileSelect(file);
+        void handleFileSelect(file);
         closeCameraModal();
     }, 'image/jpeg', 0.95);
 });
@@ -150,24 +218,106 @@ switchCameraBtn.addEventListener('click', async () => {
     }
 });
 
-function handleFileSelect(file) {
+async function handleFileSelect(file, { compress = true, maxBytes = 1024 * 1024 } = {}) {
     if (!file.type.startsWith('image/')) {
         showError('Por favor selecciona una imagen');
         return;
     }
 
-    const maxSizeInMB = 5;
-    const maxSizeInBytes = maxSizeInMB * 1024 * 1024;
-    if (file.size > maxSizeInBytes) {
-        showError(`La imagen no puede ser mayor a ${maxSizeInMB} MB. Tu archivo es de ${formatFileSize(file.size)}`);
+    let normalizedFile = file;
+    if (compress) {
+        try {
+            normalizedFile = await compressImageFile(file, { maxBytes });
+        } catch (error) {
+            console.error('Error compressing image:', error);
+        }
+    }
+
+    if (normalizedFile.size > maxBytes) {
+        const maxSizeInMB = Math.round((maxBytes / (1024 * 1024)) * 100) / 100;
+        showError(`La imagen no puede ser mayor a ${maxSizeInMB} MB. Tu archivo es de ${formatFileSize(normalizedFile.size)}`);
         return;
     }
 
-    selectedFileData = file;
-    fileName.textContent = `Archivo: ${file.name}`;
-    fileSize.textContent = `Tamaño: ${formatFileSize(file.size)}`;
+    selectedFileData = normalizedFile;
+    fileName.textContent = `Archivo: ${normalizedFile.name}`;
+    fileSize.textContent = `Tamaño: ${formatFileSize(normalizedFile.size)}`;
     selectedFile.classList.add('show');
     uploadBtn.disabled = false;
+}
+
+function compressImageFile(file, { maxBytes } = {}) {
+    const maxDimension = 1280;
+    const minDimension = 640;
+    const minQuality = 0.6;
+    const qualityStep = 0.08;
+    const scaleStep = 0.85;
+    const maxTargetBytes = maxBytes || 1024 * 1024;
+
+    return new Promise((resolve, reject) => {
+        const img = new Image();
+        const objectUrl = URL.createObjectURL(file);
+
+        img.onload = async () => {
+            let { width, height } = img;
+            const initialScale = Math.min(1, maxDimension / Math.max(width, height));
+            width = Math.max(1, Math.round(width * initialScale));
+            height = Math.max(1, Math.round(height * initialScale));
+
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            let quality = 0.9;
+            let blob = null;
+
+            while (true) {
+                canvas.width = width;
+                canvas.height = height;
+                ctx.drawImage(img, 0, 0, width, height);
+
+                blob = await new Promise((resolveBlob) => {
+                    canvas.toBlob(
+                        resolveBlob,
+                        'image/jpeg',
+                        quality
+                    );
+                });
+
+                if (!blob) {
+                    URL.revokeObjectURL(objectUrl);
+                    reject(new Error('No se pudo comprimir la imagen'));
+                    return;
+                }
+
+                if (blob.size <= maxTargetBytes) {
+                    break;
+                }
+
+                if (quality - qualityStep >= minQuality) {
+                    quality -= qualityStep;
+                    continue;
+                }
+
+                if (Math.max(width, height) <= minDimension) {
+                    break;
+                }
+
+                width = Math.max(1, Math.round(width * scaleStep));
+                height = Math.max(1, Math.round(height * scaleStep));
+                quality = 0.9;
+            }
+
+            URL.revokeObjectURL(objectUrl);
+            const compressedName = file.name.replace(/\.(png|webp|bmp|gif|jpeg|jpg)$/i, '.jpg');
+            resolve(new File([blob], compressedName, { type: 'image/jpeg' }));
+        };
+
+        img.onerror = () => {
+            URL.revokeObjectURL(objectUrl);
+            reject(new Error('No se pudo leer la imagen'));
+        };
+
+        img.src = objectUrl;
+    });
 }
 
 clearBtn.addEventListener('click', () => {

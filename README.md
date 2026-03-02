@@ -29,6 +29,20 @@ Proyecto impulsado por la comunidad, desarrollado por la comunidad, para la comu
 - **Backend**: FastAPI (Python)
 - **Frontend**: HTML5, CSS3, JavaScript (vanilla)
 
+## Despliegue en pruebas 🚀
+
+Utiliza Docker Compose para levantar la aplicación localmente:
+
+```bash
+docker-compose -f compose.dev.yaml build
+docker-compose -f compose.dev.yaml up -d
+```
+O también de forma más compacta:
+
+```bash
+docker compose -f compose.dev.yaml up -d --build
+```
+
 ---
 
 ## Contribuciones 🤝

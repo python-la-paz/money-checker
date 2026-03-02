@@ -13,7 +13,7 @@ from .detector import analyze_bill
 app = FastAPI(title='Verificador de Serie "B"', version="1.0.0")
 
 # File upload configuration
-MAX_FILE_SIZE = 10 * 1024 * 1024  # 5 MB in bytes
+MAX_FILE_SIZE = 1 * 1024 * 1024  # 1 MB in bytes
 
 # Initialize database
 db = Database()
@@ -72,12 +72,12 @@ async def upload_photo(request: Request, file: UploadFile = File(...)):
         # Read file contents
         contents = await file.read()
 
-        # Validate file size (max 5 MB)
+        # Validate file size (max 1 MB)
         if len(contents) > MAX_FILE_SIZE:
             file_size_mb = len(contents) / (1024 * 1024)
             return {
                 "status": "error",
-                "message": f"El archivo es demasiado grande ({file_size_mb:.2f} MB). El tamaño máximo permitido es 5 MB",
+                "message": f"El archivo es demasiado grande ({file_size_mb:.2f} MB). El tamaño máximo permitido es 1 MB",
             }, 400
 
         # Extract metadata from request
