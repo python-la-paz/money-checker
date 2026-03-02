@@ -1,17 +1,19 @@
-from fastapi import FastAPI, UploadFile, File, Request
+import copy
+
+from fastapi import FastAPI, HTTPException, UploadFile, File, Request
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 import os
 from datetime import datetime
-from typing import Optional, Dict
-import httpx
 from .database import Database
 from .metadata import MetadataExtractor
 from .logger import logger
-from .detector import analyze_bill, OBSERVED_RANGES
-from .models import AnalysisResponse, RangeInput
+from .detector import analyze_bill
 
 app = FastAPI(title='Verificador de Serie "B"', version="1.0.0")
+
+# File upload configuration
+MAX_FILE_SIZE = 10 * 1024 * 1024  # 5 MB in bytes
 
 # Initialize database
 db = Database()
@@ -67,6 +69,17 @@ async def upload_photo(request: Request, file: UploadFile = File(...)):
     - Timestamp
     """
     try:
+        # Read file contents
+        contents = await file.read()
+
+        # Validate file size (max 5 MB)
+        if len(contents) > MAX_FILE_SIZE:
+            file_size_mb = len(contents) / (1024 * 1024)
+            return {
+                "status": "error",
+                "message": f"El archivo es demasiado grande ({file_size_mb:.2f} MB). El tamaño máximo permitido es 5 MB",
+            }, 400
+
         # Extract metadata from request
         metadata = await metadata_extractor.extract(request, file)
 
@@ -77,7 +90,6 @@ async def upload_photo(request: Request, file: UploadFile = File(...)):
         os.makedirs("uploads", exist_ok=True)
 
         with open(file_path, "wb") as f:
-            contents = await file.read()
             f.write(contents)
             metadata["file_size"] = len(contents)
         # logic to analyze image  and return JSON to storage results and send to frontend for display
@@ -91,7 +103,6 @@ async def upload_photo(request: Request, file: UploadFile = File(...)):
                 status_code=500,
                 detail=f"Error processing the image: {str(e)}",
             )
-        # TODO: Structure the results and return to frontend for display
         # Example response structure
         # {
         #  "serials": [
@@ -120,19 +131,13 @@ async def upload_photo(request: Request, file: UploadFile = File(...)):
         #  },
         #  "annotated_image_base64": "string"
         # }
-
+        result_storage = copy.deepcopy(result)
+        del result_storage["annotated_image_base64"]
+        metadata["analysis_result"] = result_storage
         # Store in MongoDB
         await db.save_upload(metadata)
-        return {
-            "status": "success",
-            "message": "Photo uploaded successfully",
-            "metadata": {
-                "filename": metadata["filename"],
-                "timestamp": metadata["timestamp"],
-                "file_size": metadata["file_size"],
-                "content_type": metadata["content_type"],
-            },
-        }
+        result["status"] = "success"
+        return result
 
     except Exception as e:
         logger.error(f"Error uploading photo: {str(e)}")

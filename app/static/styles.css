@@ -341,6 +341,18 @@ button {
     border-bottom: none;
 }
 
+.metadata-item.valid {
+    background-color: #d4edda;
+    padding: 8px 10px;
+    border-radius: 5px;
+}
+
+.metadata-item.invalid {
+    background-color: #f8d7da;
+    padding: 8px 10px;
+    border-radius: 5px;
+}
+
 .metadata-label {
     color: var(--color-primary);
     font-weight: 600;
@@ -349,6 +361,20 @@ button {
 .metadata-value {
     color: var(--color-text-dark);
     word-break: break-all;
+}
+
+/* Annotated Image */
+.annotated-image-container {
+    margin-top: 15px;
+    text-align: center;
+}
+
+.annotated-image {
+    max-width: 100%;
+    height: auto;
+    border-radius: var(--border-radius-sm);
+    box-shadow: 0 4px 8px var(--color-shadow-light);
+    display: inline-block;
 }
 
 /* Camera Modal */

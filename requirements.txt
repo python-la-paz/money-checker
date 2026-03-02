@@ -2,9 +2,14 @@ fastapi==0.104.1
 uvicorn==0.24.0
 python-multipart==0.0.6
 pymongo==4.6.0
+pydantic==2.12.5
 motor==3.3.2
 python-dotenv==1.0.0
 geoip2==4.7.0
 httpx==0.25.2
 aiofiles==23.2.1
 maxminddb==2.6.0
+easyocr==1.7.2
+opencv-python-headless==4.13.0.92
+numpy==2.4.2
+pre-commit==4.5.1
