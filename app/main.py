@@ -8,8 +8,10 @@ import httpx
 from .database import Database
 from .metadata import MetadataExtractor
 from .logger import logger
+from .detector import analyze_bill, OBSERVED_RANGES
+from .models import AnalysisResponse, RangeInput
 
-app = FastAPI(title="Verificador de Serie \"B\"", version="1.0.0")
+app = FastAPI(title='Verificador de Serie "B"', version="1.0.0")
 
 # Initialize database
 db = Database()
@@ -57,7 +59,7 @@ async def get_about():
 async def upload_photo(request: Request, file: UploadFile = File(...)):
     """
     Upload a photo and store metadata
-    
+
     Extracts metadata including:
     - IP address (considering proxy headers)
     - Geolocation
@@ -67,19 +69,58 @@ async def upload_photo(request: Request, file: UploadFile = File(...)):
     try:
         # Extract metadata from request
         metadata = await metadata_extractor.extract(request, file)
-        
+
         logger.info(f"Photo upload from {metadata['ip_address']}")
-        
+
         # Save file
         file_path = os.path.join("uploads", metadata["filename"])
         os.makedirs("uploads", exist_ok=True)
-        
+
         with open(file_path, "wb") as f:
             contents = await file.read()
             f.write(contents)
             metadata["file_size"] = len(contents)
-        # TODO: Add logic to analyze image  and return JSON to storage results and send to frontend for display
-        
+        # logic to analyze image  and return JSON to storage results and send to frontend for display
+
+        try:
+            result = analyze_bill(contents)
+        except ValueError as e:
+            raise HTTPException(status_code=400, detail=str(e))
+        except Exception as e:
+            raise HTTPException(
+                status_code=500,
+                detail=f"Error processing the image: {str(e)}",
+            )
+        # TODO: Structure the results and return to frontend for display
+        # Example response structure
+        # {
+        #  "serials": [
+        #    {
+        #      "full_code": "string",
+        #      "digits": "string",
+        #      "letter": "string",
+        #      "region": "string",
+        #      "confidence_percent": 0
+        #    }
+        #  ],
+        #  "denomination": {
+        #    "number": "string",
+        #    "text": "string",
+        #    "confidence_number": 0,
+        #    "confidence_text": 0
+        #  },
+        #  "validation": {
+        #    "valid": true,
+        #    "message": "string",
+        #    "validation_details": [
+        #      "valid": bool, //False if B and in ranges
+        #      "message": "string", // Info message about the validation result, e.g. "La validación para la serie B no aplica."
+        #      "validation_details": {} // Empty if not evaluated
+        #    ]
+        #  },
+        #  "annotated_image_base64": "string"
+        # }
+
         # Store in MongoDB
         await db.save_upload(metadata)
         return {
@@ -89,27 +130,22 @@ async def upload_photo(request: Request, file: UploadFile = File(...)):
                 "filename": metadata["filename"],
                 "timestamp": metadata["timestamp"],
                 "file_size": metadata["file_size"],
-                "content_type": metadata["content_type"]
-            }
+                "content_type": metadata["content_type"],
+            },
         }
-    
+
     except Exception as e:
         logger.error(f"Error uploading photo: {str(e)}")
-        return {
-            "status": "error",
-            "message": str(e)
-        }, 500
+        return {"status": "error", "message": str(e)}, 500
 
 
 @app.get("/health")
 async def health_check():
     """Health check endpoint"""
-    return {
-        "status": "ok",
-        "timestamp": datetime.utcnow().isoformat()
-    }
+    return {"status": "ok", "timestamp": datetime.utcnow().isoformat()}
 
 
 if __name__ == "__main__":
     import uvicorn
+
     uvicorn.run(app, host="0.0.0.0", port=8000)
