@@ -3,10 +3,24 @@ import easyocr
 import re
 import numpy as np
 import base64
+from bisect import bisect_right
 
-# Observed ranges by denomination for 'B' series
-# Format: { denomination: [(range_start, range_end), ...] }
-OBSERVED_RANGES = {
+# Precompiled regex patterns
+_RE_DIGITS = re.compile(r"^\d{3,}$")
+_RE_SINGLE_LETTER = re.compile(r"^[A-Z]$")
+_RE_FIND_NUMBERS = re.compile(r"\d+")
+
+# Processing constants
+MAX_WIDTH = 1500  # max px width before OCR (saves RAM & CPU proportionally)
+MIN_WIDTH = 1500  # min px width – upscale small images for better OCR accuracy
+
+# Restrict OCR charset per region → fewer candidates, faster inference
+_ALLOWLIST_SERIAL = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
+_ALLOWLIST_DENOM = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz "
+
+# Observed ranges by denomination (letter B)
+# Pre-sorted at module load for binary search.
+_RAW_RANGES = {
     "10": [
         (67250001, 67700000),
         (69050001, 69500000),
@@ -36,6 +50,7 @@ OBSERVED_RANGES = {
         (118700001, 119150000),
         (119150001, 119600000),
         (120500001, 120950000),
+        (12168910, 12168999),
     ],
     "50": [
         (77100001, 77550000),
@@ -53,13 +68,28 @@ OBSERVED_RANGES = {
     ],
 }
 
-VALID_DENOMINATIONS = ["10", "20", "50"]
+# Build sorted arrays + index arrays once at import time
+OBSERVED_RANGES: dict[str, list[tuple[int, int]]] = {}
+_RANGE_STARTS: dict[str, list[int]] = {}
+_RANGE_ENDS: dict[str, list[int]] = {}
+
+for _d, _rs in _RAW_RANGES.items():
+    _sorted = sorted(_rs, key=lambda r: r[0])
+    OBSERVED_RANGES[_d] = _sorted
+    _RANGE_STARTS[_d] = [r[0] for r in _sorted]
+    _RANGE_ENDS[_d] = [r[1] for r in _sorted]
+
+VALID_DENOMINATIONS = ("10", "20", "50")  # tuple → faster `in`
 
 DENOMINATION_WORDS = {
     "10": "DIEZ",
     "20": "VEINTE",
     "50": "CINCUENTA",
 }
+
+_DENOM_KEYWORDS = frozenset(
+    list(DENOMINATION_WORDS.values()) + ["BOLIVIANOS", "BOLIVIANO"]
+)
 
 
 # OCR reader singleton
@@ -69,30 +99,58 @@ _reader = None
 def get_reader():
     global _reader
     if _reader is None:
-        _reader = easyocr.Reader(["en"], gpu=False)
+        _reader = easyocr.Reader(["en"], gpu=False, verbose=False)
     return _reader
 
 
-# Image preprocessing
+# Image preprocessing (optimized)
 def preprocess_image(image_bytes: bytes):
-    """Load image from bytes and apply OCR preprocessing."""
+    """
+    Load image from bytes, UP-SCALE if narrower than MIN_WIDTH,
+    DOWN-SCALE if wider than MAX_WIDTH, then apply histogram
+    equalisation + median blur.
+    """
     nparr = np.frombuffer(image_bytes, np.uint8)
     img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+    del nparr  # free raw buffer immediately
+
     if img is None:
         raise ValueError("Could not decode the image")
+
+    h, w = img.shape[:2]
+
+    # ─ Up-scale small images for better OCR accuracy
+    if w < MIN_WIDTH:
+        scale = MIN_WIDTH / w
+        img = cv2.resize(
+            img,
+            (MIN_WIDTH, int(h * scale)),
+            interpolation=cv2.INTER_CUBIC,
+        )
+    # ─ Down-scale large images (saves RAM & CPU)
+    elif w > MAX_WIDTH:
+        scale = MAX_WIDTH / w
+        img = cv2.resize(
+            img,
+            (MAX_WIDTH, int(h * scale)),
+            interpolation=cv2.INTER_AREA,
+        )
+
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     enhanced = cv2.equalizeHist(gray)
+    del gray  # free intermediate
+
     denoised = cv2.medianBlur(enhanced, 3)
+    del enhanced
+
     return img, denoised
 
 
-# OCR extraction from three regions
+# OCR extraction from three regions (optimized)
 def extract_text_regions(img_original, img_processed):
     """
-    Extract OCR text from three regions of the banknote:
-      - Top Right:     serial number + letter
-      - Bottom Left:   serial number + letter
-      - Bottom Right:  large denomination number + BOLIVIANOS text
+    Extract OCR text from three regions using character allowlists
+    that restrict the search space and speed up inference.
     """
     height, width = img_processed.shape
 
@@ -100,14 +158,17 @@ def extract_text_regions(img_original, img_processed):
         "top_right": {
             "coords": (width // 2, 0, width, height // 3),
             "label": "Top Right",
+            "allowlist": _ALLOWLIST_SERIAL,
         },
         "bottom_left": {
             "coords": (0, 2 * height // 3, width // 2, height),
             "label": "Bottom Left",
+            "allowlist": _ALLOWLIST_SERIAL,
         },
         "bottom_right": {
             "coords": (width // 2, height // 3, width, height),
             "label": "Bottom Right",
+            "allowlist": _ALLOWLIST_DENOM,
         },
     }
 
@@ -121,7 +182,12 @@ def extract_text_regions(img_original, img_processed):
         if region.size == 0:
             continue
 
-        results = reader.readtext(region, detail=1, paragraph=False)
+        results = reader.readtext(
+            region,
+            detail=1,
+            paragraph=False,
+            allowlist=info["allowlist"],
+        )
 
         for bbox, text, confidence in results:
             adjusted_bbox = [[p[0] + x0, p[1] + y0] for p in bbox]
@@ -141,11 +207,11 @@ def extract_text_regions(img_original, img_processed):
 # Serial number search
 def find_serial_numbers(ocr_elements):
     """
-    Find serial numbers (digits + letter) in Top Right and Bottom Left
-    by matching separate OCR elements (number in one element, letter in another).
+    Find serial numbers in Top Right and Bottom Left using
+    precompiled regex patterns.
     """
     results = []
-    serial_regions = ["Top Right", "Bottom Left"]
+    serial_regions = ("Top Right", "Bottom Left")
 
     for region in serial_regions:
         region_elems = [e for e in ocr_elements if e["region"] == region]
@@ -161,9 +227,9 @@ def find_serial_numbers(ocr_elements):
                 .upper()
                 .strip()
             )
-            if re.match(r"^\d{3,}$", cleaned):
+            if _RE_DIGITS.match(cleaned):
                 numbers.append({**elem, "index": i, "digits": cleaned})
-            if re.match(r"^[A-Z]$", cleaned):
+            if _RE_SINGLE_LETTER.match(cleaned):
                 letters.append({**elem, "index": i, "letter": cleaned})
 
         for num_elem in numbers:
@@ -175,27 +241,17 @@ def find_serial_numbers(ocr_elements):
                         2,
                     )
                     if confidence > 80:
-
                         already_exists = any(
                             r["full_code"] == full_code and r["region"] == region
                             for r in results
                         )
-
                         if not already_exists:
                             results.append(
                                 {
                                     "digits": num_elem["digits"],
                                     "letter": let_elem["letter"],
                                     "full_code": full_code,
-                                    "confidence": round(
-                                        (
-                                            num_elem["confidence"]
-                                            + let_elem["confidence"]
-                                        )
-                                        / 2
-                                        * 100,
-                                        2,
-                                    ),
+                                    "confidence": confidence,
                                     "bbox": num_elem["bbox"],
                                     "bbox_digits": num_elem["bbox"],
                                     "bbox_letter": let_elem["bbox"],
@@ -209,9 +265,8 @@ def find_serial_numbers(ocr_elements):
 # Denomination search
 def find_denomination(ocr_elements):
     """
-    Find denomination in Bottom Right:
-      - Large number (10, 20, 50)
-      - Text "DIEZ/VEINTE/CINCUENTA BOLIVIANOS"
+    Find denomination in Bottom Right using precompiled regex
+    and frozenset keyword lookup.
     """
     info = {
         "number": None,
@@ -229,7 +284,7 @@ def find_denomination(ocr_elements):
     # Find denomination number
     for elem in elems:
         cleaned = elem["text"].replace("O", "0").replace("o", "0").strip()
-        for num in re.findall(r"\d+", cleaned):
+        for num in _RE_FIND_NUMBERS.findall(cleaned):
             if num in VALID_DENOMINATIONS:
                 info["number"] = num
                 info["confidence_number"] = round(elem["confidence"] * 100, 2)
@@ -239,10 +294,9 @@ def find_denomination(ocr_elements):
             break
 
     # Find BOLIVIANOS text
-    keywords = list(DENOMINATION_WORDS.values()) + ["BOLIVIANOS", "BOLIVIANO"]
     for elem in elems:
         text_upper = elem["text"].upper().strip()
-        if any(kw in text_upper for kw in keywords):
+        if any(kw in text_upper for kw in _DENOM_KEYWORDS):
             info["denomination_text"] = text_upper
             info["confidence_text"] = round(elem["confidence"] * 100, 2)
             info["bbox_text"] = elem["bbox"]
@@ -253,7 +307,7 @@ def find_denomination(ocr_elements):
         parts = []
         for elem in elems:
             t = elem["text"].upper().strip()
-            if any(kw in t for kw in keywords):
+            if any(kw in t for kw in _DENOM_KEYWORDS):
                 parts.append(t)
                 if not info["bbox_text"]:
                     info["bbox_text"] = elem["bbox"]
@@ -264,13 +318,24 @@ def find_denomination(ocr_elements):
     return info
 
 
-# Bill validation (observed range check)
+# Range lookup with binary search
+def _in_observed_range(denom: str, num: int):
+    """O(log n) range check using bisect on pre-sorted start array."""
+    starts = _RANGE_STARTS.get(denom)
+    ends = _RANGE_ENDS.get(denom)
+    if not starts:
+        return None
+
+    idx = bisect_right(starts, num) - 1
+    if idx >= 0 and starts[idx] <= num <= ends[idx]:
+        return (starts[idx], ends[idx])
+    return None
+
+
+# Bill validation
 def validate_bill(serials: list, denomination: dict) -> dict:
     """
-    Check if the bill is observed:
-      - Serial letter must be 'B'
-      - Serial number must fall within the observed range for the denomination
-    Only stores the matched range detail (not every range checked).
+    Check if the bill is observed using binary search on sorted ranges.
     """
     result = {
         "valid": True,
@@ -288,7 +353,6 @@ def validate_bill(serials: list, denomination: dict) -> dict:
         result["message"] = (
             f"No observed ranges registered for denomination {denom} Bs."
         )
-
         return result
 
     for serial in serials:
@@ -309,18 +373,13 @@ def validate_bill(serials: list, denomination: dict) -> dict:
             )
             continue
 
-        matched_range = None
-        for range_start, range_end in ranges:
-            if range_start <= num_int <= range_end:
-                matched_range = (range_start, range_end)
-                break
-
-        if matched_range:
+        matched = _in_observed_range(denom, num_int)
+        if matched:
             result["valid"] = False
             result["message"] = "Billete observado"
             result["validation_details"] = {
                 "serial": serial["full_code"],
-                "range": f"[{matched_range[0]} - {matched_range[1]}]",
+                "range": f"[{matched[0]} - {matched[1]}]",
                 "denom": denom,
             }
             return result
@@ -396,13 +455,13 @@ def draw_bounding_boxes(img_original, serials, denomination):
 # Main analysis pipeline
 def analyze_bill(image_bytes: bytes) -> dict:
     """
-    Full pipeline: preprocess -> OCR -> detect serial + denomination
-    -> validate range -> generate annotated image.
-    Returns a dictionary with all relevant information.
+    Full pipeline: preprocess → OCR → detect serial + denomination
+    → validate range → generate annotated image.
     """
     img_original, img_processed = preprocess_image(image_bytes)
 
     elements = extract_text_regions(img_original, img_processed)
+    del img_processed  # free grayscale array after OCR
 
     serials = find_serial_numbers(elements)
     denomination = find_denomination(elements)
@@ -410,7 +469,10 @@ def analyze_bill(image_bytes: bytes) -> dict:
     validation = validate_bill(serials, denomination)
 
     annotated_bytes = draw_bounding_boxes(img_original, serials, denomination)
+    del img_original  # free original after annotation
+
     img_base64 = base64.b64encode(annotated_bytes).decode("utf-8")
+    del annotated_bytes
 
     return {
         "serials": [
