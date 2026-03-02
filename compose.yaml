@@ -21,8 +21,8 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '1.0'
-          memory: 4G
+          cpus: '1.3'
+          memory: 5G
 networks:
   web:
     external: true
