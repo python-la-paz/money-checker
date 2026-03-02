@@ -110,13 +110,13 @@ async def upload_photo(request: Request, file: UploadFile = File(...)):
         #    "confidence_text": 0
         #  },
         #  "validation": {
-        #    "valid": true,
-        #    "message": "string",
-        #    "validation_details": [
-        #      "valid": bool, //False if B and in ranges
-        #      "message": "string", // Info message about the validation result, e.g. "La validación para la serie B no aplica."
-        #      "validation_details": {} // Empty if not evaluated
-        #    ]
+        #          "valid": false,
+        #          "message": "Billete observado",
+        #          "validation_details": {
+        #            "serial": "012168910 B",
+        #            "range": "[12168910 - 12168999]",
+        #            "denom": "20"
+        #          }
         #  },
         #  "annotated_image_base64": "string"
         # }
