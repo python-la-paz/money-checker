@@ -1,18 +1,34 @@
 import cv2
 import easyocr
 import re
+import os
+import hashlib
 import numpy as np
 import base64
 from bisect import bisect_right
+from collections import OrderedDict
+from threading import Lock
+
+# ── CPU thread tuning (must happen before PyTorch/MKL init) ──────────
+_NUM_CORES = int(os.getenv("NUM_CORES", "1"))
+os.environ.setdefault("OMP_NUM_THREADS", str(_NUM_CORES))
+os.environ.setdefault("MKL_NUM_THREADS", str(_NUM_CORES))
+os.environ.setdefault("OPENBLAS_NUM_THREADS", str(_NUM_CORES))
+try:
+    import torch
+
+    torch.set_num_threads(_NUM_CORES)
+except ImportError:
+    pass
 
 # Precompiled regex patterns
-_RE_DIGITS = re.compile(r"^\d{3,}$")
+_RE_DIGITS = re.compile(r"^\d{9}$")
 _RE_SINGLE_LETTER = re.compile(r"^[A-Z]$")
 _RE_FIND_NUMBERS = re.compile(r"\d+")
 
 # Processing constants
-MAX_WIDTH = 1500  # max px width before OCR (saves RAM & CPU proportionally)
-MIN_WIDTH = 1500  # min px width – upscale small images for better OCR accuracy
+MAX_WIDTH = 1200  # max px width before OCR (saves RAM & CPU proportionally)
+MIN_WIDTH = 1200  # min px width – upscale small images for better OCR accuracy
 
 # Restrict OCR charset per region → fewer candidates, faster inference
 _ALLOWLIST_SERIAL = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
@@ -91,6 +107,33 @@ _DENOM_KEYWORDS = frozenset(
 )
 
 
+# ── In-memory LRU cache for analysis results ──────────────────────
+_CACHE_MAX = int(os.getenv("RESULT_CACHE_SIZE", "128"))
+_cache: OrderedDict[str, dict] = OrderedDict()
+_cache_lock = Lock()
+
+
+def _cache_key(image_bytes: bytes) -> str:
+    """Fast SHA-256 hash of image bytes."""
+    return hashlib.sha256(image_bytes).hexdigest()
+
+
+def _cache_get(key: str):
+    with _cache_lock:
+        if key in _cache:
+            _cache.move_to_end(key)
+            return _cache[key]
+    return None
+
+
+def _cache_put(key: str, value: dict):
+    with _cache_lock:
+        _cache[key] = value
+        _cache.move_to_end(key)
+        while len(_cache) > _CACHE_MAX:
+            _cache.popitem(last=False)
+
+
 # OCR reader singleton
 _reader = None
 
@@ -100,6 +143,11 @@ def get_reader():
     if _reader is None:
         _reader = easyocr.Reader(["en"], gpu=False, verbose=False)
     return _reader
+
+
+def preload_model():
+    """Eagerly load the OCR model so the first request is fast."""
+    get_reader()
 
 
 # Image preprocessing (optimized)
@@ -165,7 +213,7 @@ def extract_text_regions(img_original, img_processed):
             "allowlist": _ALLOWLIST_SERIAL,
         },
         "bottom_right": {
-            "coords": (width // 2, height // 3, width, height),
+            "coords": (width // 2, height // 2, width, height),
             "label": "Bottom Right",
             "allowlist": _ALLOWLIST_DENOM,
         },
@@ -233,7 +281,9 @@ def find_serial_numbers(ocr_elements):
 
         for num_elem in numbers:
             for let_elem in letters:
-                if abs(num_elem["index"] - let_elem["index"]) <= 2:
+                # Letter must be to the right (after) the digits
+                diff = let_elem["index"] - num_elem["index"]
+                if 0 < diff <= 2:
                     full_code = f"{num_elem['digits']} {let_elem['letter']}"
                     confidence = round(
                         (num_elem["confidence"] + let_elem["confidence"]) / 2 * 100,
@@ -456,7 +506,17 @@ def analyze_bill(image_bytes: bytes) -> dict:
     """
     Full pipeline: preprocess → OCR → detect serial + denomination
     → validate range → generate annotated image.
+
+    Results are cached in RAM by image hash (LRU, configurable size)
+    so repeated uploads of the same image return instantly.
     """
+    # ── Check in-memory cache first ──────────────────────────────
+    key = _cache_key(image_bytes)
+    cached = _cache_get(key)
+    if cached is not None:
+        return cached
+
+    # ── Run full pipeline ────────────────────────────────────────
     img_original, img_processed = preprocess_image(image_bytes)
 
     elements = extract_text_regions(img_original, img_processed)
@@ -473,7 +533,7 @@ def analyze_bill(image_bytes: bytes) -> dict:
     img_base64 = base64.b64encode(annotated_bytes).decode("utf-8")
     del annotated_bytes
 
-    return {
+    result = {
         "serials": [
             {
                 "full_code": s["full_code"],
@@ -493,3 +553,7 @@ def analyze_bill(image_bytes: bytes) -> dict:
         "validation": validation,
         "annotated_image_base64": img_base64,
     }
+
+    # ── Store in cache ───────────────────────────────────────────
+    _cache_put(key, result)
+    return result

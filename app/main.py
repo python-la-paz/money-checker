@@ -1,4 +1,6 @@
 import copy
+import asyncio
+from concurrent.futures import ThreadPoolExecutor
 
 from fastapi import FastAPI, HTTPException, UploadFile, File, Request
 from fastapi.responses import HTMLResponse
@@ -8,9 +10,12 @@ from datetime import datetime
 from .database import Database
 from .metadata import MetadataExtractor
 from .logger import logger
-from .detector import analyze_bill
+from .detector import analyze_bill, preload_model
 
 app = FastAPI(title='Verificador de Serie "B"', version="1.0.0")
+
+# Thread pool for CPU-bound OCR work (sized for 1.3 CPU limit)
+_ocr_pool = ThreadPoolExecutor(max_workers=1, thread_name_prefix="ocr")
 
 # File upload configuration
 MAX_FILE_SIZE = 1 * 1024 * 1024  # 1 MB in bytes
@@ -27,9 +32,13 @@ metadata_extractor = MetadataExtractor()
 
 @app.on_event("startup")
 async def startup_event():
-    """Initialize database connection on startup"""
+    """Initialize database connection and preload OCR model on startup"""
     await db.connect()
     logger.info("Database connected")
+    # Preload EasyOCR model in background thread so first request is fast
+    loop = asyncio.get_event_loop()
+    await loop.run_in_executor(_ocr_pool, preload_model)
+    logger.info("OCR model preloaded")
 
 
 @app.on_event("shutdown")
@@ -95,7 +104,8 @@ async def upload_photo(request: Request, file: UploadFile = File(...)):
         # logic to analyze image  and return JSON to storage results and send to frontend for display
 
         try:
-            result = analyze_bill(contents)
+            loop = asyncio.get_event_loop()
+            result = await loop.run_in_executor(_ocr_pool, analyze_bill, contents)
         except ValueError as e:
             raise HTTPException(status_code=400, detail=str(e))
         except Exception as e:

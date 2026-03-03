@@ -22,6 +22,12 @@ COPY .env .
 # Create necessary directories
 RUN mkdir -p uploads logs geoip
 
+# CPU thread tuning (1.3 CPU limit)
+ENV OMP_NUM_THREADS=1
+ENV MKL_NUM_THREADS=1
+ENV OPENBLAS_NUM_THREADS=1
+ENV NUM_CORES=1
+
 # Expose port
 EXPOSE 8000
 
