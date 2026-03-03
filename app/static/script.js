@@ -22,6 +22,8 @@ const closeCameraBtn = document.getElementById('closeCameraBtn');
 const switchCameraBtn = document.getElementById('switchCameraBtn');
 const cameraFrame = document.querySelector('.camera-frame');
 
+const CAMERA_CAPTURE_SCALE = 2;
+
 let selectedFileData = null;
 let cameraStream = null;
 let isCameraActive = false;
@@ -93,8 +95,8 @@ async function startCameraStream() {
     const deviceId = videoDevices[currentDeviceIndex]?.deviceId;
     const constraints = {
         video: deviceId
-            ? { deviceId: { exact: deviceId }, width: { ideal: 1280 }, height: { ideal: 720 } }
-            : { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } },
+            ? { deviceId: { exact: deviceId }, width: { ideal: 1920 }, height: { ideal: 1080 } }
+            : { facingMode: 'environment', width: { ideal: 1920 }, height: { ideal: 1080 } },
         audio: false
     };
 
@@ -178,8 +180,8 @@ captureBtn.addEventListener('click', () => {
     const context = cameraCanvas.getContext('2d');
     const crop = getFrameCropRect();
     if (crop && crop.width > 0 && crop.height > 0) {
-        cameraCanvas.width = Math.round(crop.width);
-        cameraCanvas.height = Math.round(crop.height);
+        cameraCanvas.width = Math.round(crop.width * CAMERA_CAPTURE_SCALE);
+        cameraCanvas.height = Math.round(crop.height * CAMERA_CAPTURE_SCALE);
         context.drawImage(
             cameraFeed,
             crop.x,
@@ -192,9 +194,9 @@ captureBtn.addEventListener('click', () => {
             cameraCanvas.height
         );
     } else {
-        cameraCanvas.width = cameraFeed.videoWidth;
-        cameraCanvas.height = cameraFeed.videoHeight;
-        context.drawImage(cameraFeed, 0, 0);
+        cameraCanvas.width = Math.round(cameraFeed.videoWidth * CAMERA_CAPTURE_SCALE);
+        cameraCanvas.height = Math.round(cameraFeed.videoHeight * CAMERA_CAPTURE_SCALE);
+        context.drawImage(cameraFeed, 0, 0, cameraCanvas.width, cameraCanvas.height);
     }
 
     cameraCanvas.toBlob((blob) => {
