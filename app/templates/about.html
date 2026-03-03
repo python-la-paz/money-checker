@@ -1,90 +1,141 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Acerca de | 🇧🇴 Billete Verificador</title>
+    <link rel="stylesheet" href="/static/styles.css" />
+  </head>
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Acerca de | 🇧🇴 Verificador de Serie</title>
-    <link rel="stylesheet" href="/static/styles.css">
-</head>
-
-<body>
+  <body>
     <div class="container">
-        <div class="header">
-            <h1>🇧🇴 Verificador Serie</h1>
-            <p>Acerca de Nosotros</p>
-            <a href="/" class="btn-home">🏠 Ir a Inicio</a>
+      <div class="header">
+        <h1>🇧🇴 Verificador Serie</h1>
+        <p>Acerca de Nosotros</p>
+        <a href="/" class="btn-home">🏠 Ir a Inicio</a>
+      </div>
+
+      <div class="legal-content">
+        <h2>Acerca del Proyecto</h2>
+
+        <h3>1. ¿Quiénes somos?</h3>
+        <p>
+          Python La Paz es una comunidad abierta de desarrolladores que promueve
+          el aprendizaje, la colaboración y la creación de herramientas
+          tecnológicas con impacto local. Este proyecto nace como una iniciativa
+          comunitaria en respuesta a una necesidad ciudadana concreta.
+        </p>
+
+        <h3>2. ¿Qué es Billete Verificador?</h3>
+        <p>
+          Billete Verificador es una aplicación web desarrollada por Python La
+          Paz, diseñada para apoyar la verificación referencial de series de
+          billetes en circulación, tomando como base los comunicados públicos
+          emitidos por el Banco Central de Bolivia (BCB).
+        </p>
+        <p>
+          Es importante destacar que esta aplicación no es un producto oficial
+          de ninguna entidad financiera ni reemplaza los canales formales de
+          verificación.
+        </p>
+
+        <h3>3. Características Principales</h3>
+        <ul>
+          <li>
+            <strong>Captura con cámara:</strong> Permite fotografiar el billete
+            directamente desde el dispositivo
+          </li>
+          <li>
+            <strong>Selección desde galería:</strong> Admite la carga de
+            imágenes existentes para su análisis
+          </li>
+          <li>
+            <strong>Detección de serie:</strong> Identifica el número de serie
+            mediante lectura asistida por OCR
+          </li>
+          <li>
+            <strong>Verificación referencial:</strong> Contrasta la serie
+            detectada con las listas de comunicados oficiales
+          </li>
+        </ul>
+
+        <h3>4. Tecnología Utilizada</h3>
+        <ul>
+          <li><strong>Backend:</strong> FastAPI (Python)</li>
+          <li><strong>Frontend:</strong> HTML5, CSS3, JavaScript (vanilla)</li>
+          <li>
+            <strong>OCR:</strong> Procesamiento de imágenes para extracción de
+            texto
+          </li>
+        </ul>
+
+        <h3>5. Código Abierto</h3>
+        <p>
+          El desarrollo de Billete Verificador es comunitario y completamente
+          abierto. El código fuente está disponible en GitHub, donde cualquier
+          persona puede revisarlo, proponer mejoras o reportar problemas. La
+          transparencia del código permite además la auditoría comunitaria del
+          proyecto.
+        </p>
+
+        <h3>6. Privacidad y Seguridad</h3>
+        <p>
+          El proyecto adopta un enfoque de mínima recolección de datos. La
+          información técnica registrada se utiliza únicamente con fines
+          operativos y estadísticos internos; no se comparte con terceros bajo
+          ninguna circunstancia.
+        </p>
+        <ul>
+          <li>Conexiones cifradas en tránsito</li>
+          <li>Código abierto para auditoría comunitaria</li>
+          <li>Sin recolección de datos personales identificables</li>
+        </ul>
+        <p>
+          Para más detalles, consulte nuestro
+          <a href="/disclaimer">Aviso Legal y de Privacidad</a>.
+        </p>
+
+        <h3>7. Contacto</h3>
+        <p>
+          Si desea comunicarse con la comunidad Python La Paz, puede hacerlo a
+          través de los siguientes canales:
+        </p>
+        <ul>
+          <li>
+            <strong>Sitio web:</strong>
+            <a href="https://pylapaz.org/" target="_blank">pylapaz.org</a>
+          </li>
+          <li>
+            <strong>Correo:</strong>
+            <a href="mailto:hello@pylapaz.org">hello@pylapaz.org</a>
+          </li>
+          <li>
+            <strong>Repositorio:</strong>
+            <a href="https://github.com/python-la-paz" target="_blank"
+              >github.com/python-la-paz</a
+            >
+          </li>
+        </ul>
+
+        <div class="legal-footer">
+          <p><strong>Aplicación:</strong> Billete Verificador</p>
+          <p><strong>Versión:</strong> 1.0.0</p>
+          <p><strong>Última actualización:</strong> Marzo 2, 2026</p>
         </div>
+      </div>
 
-        <div class="legal-content">
-            <h2>Acerca de PyLaPaz</h2>
-
-            <h3>¿Qué es Verificador de Serie?</h3>
-            <p>
-                Verificador de Serie es una aplicación web desarrollada por la comunidad Python La Paz,
-                orientada a apoyar la verificación referencial de series de billetes "B" en circulación, de acuerdo con
-                comunicados públicos.
-                La aplicación no es un producto oficial de ninguna entidad financiera ni reemplaza los canales formales
-                de verificación.
-            </p>
-
-            <h3>¿Quiénes somos?</h3>
-            <p>
-                Python La Paz es una comunidad abierta de desarrolladores de Python que promueve el aprendizaje, la
-                colaboración y la creación de herramientas tecnológicas con impacto local.
-            </p>
-
-            <h3>Características principales</h3>
-            <ul>
-                <li><strong>Captura con cámara:</strong> Uso directo de la cámara del dispositivo</li>
-                <li><strong>Selección desde galería:</strong> Carga de imágenes existentes</li>
-                <li><strong>Detección de serie:</strong> Lectura asistida por OCR</li>
-            </ul>
-
-            <h3>Tecnología</h3>
-            <ul>
-                <li><strong>Backend:</strong> FastAPI (Python)</li>
-                <li><strong>Frontend:</strong> HTML5, CSS3, JavaScript (vanilla)</li>
-            </ul>
-
-            <h3>Privacidad y seguridad</h3>
-            <p>
-                El proyecto adopta un enfoque de mínima recolección de datos. La información técnica se utiliza
-                únicamente para fines operativos y estadísticos internos. No se comparten datos con terceros.
-            </p>
-            <ul>
-                <li>Conexiones cifradas en tránsito</li>
-                <li>Código abierto para auditoría comunitaria</li>
-            </ul>
-
-            <h3>Proyecto de código abierto</h3>
-            <p>
-                El desarrollo es comunitario y abierto. Puedes revisar el código, proponer mejoras o reportar problemas
-                en GitHub.
-            </p>
-
-            <h3>Contacto</h3>
-            <ul>
-                <li><strong>Sitio web:</strong> https://pylapaz.org/</li>
-                <li><strong>Correo:</strong> hello@pylapaz.org</li>
-                <li><strong>Repositorio:</strong> https://github.com/python-la-paz</li>
-            </ul>
-
-            <div class="legal-footer">
-                <p><strong>Aplicación:</strong> Verificador de Serie</p>
-                <p><strong>Versión:</strong> 1.0.0</p>
-                <p><strong>Última actualización:</strong> Marzo 1, 2026</p>
-            </div>
-        </div>
-
-        <div class="footer">
-            <a href="/" class="footer-link">← Volver al inicio</a>
-            <span class="footer-separator">•</span>
-            <a href="/disclaimer" class="footer-link">Aviso Legal</a>
-            <span class="footer-separator">•</span>
-            <a href="https://github.com/python-la-paz/money-checker" target="_blank" class="footer-link">GitHub</a>
-        </div>
+      <div class="footer">
+        <a href="/" class="footer-link">← Volver al inicio</a>
+        <span class="footer-separator">•</span>
+        <a href="/disclaimer" class="footer-link">Aviso Legal</a>
+        <span class="footer-separator">•</span>
+        <a
+          href="https://github.com/python-la-paz/money-checker"
+          target="_blank"
+          class="footer-link"
+          >GitHub</a
+        >
+      </div>
     </div>
-</body>
-
+  </body>
 </html>

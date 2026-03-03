@@ -1,84 +1,104 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>🇧🇴 Verificador de Serie</title>
-    <link rel="stylesheet" href="/static/styles.css">
-</head>
-<body>
+    <link rel="stylesheet" href="/static/styles.css" />
+  </head>
+  <body>
     <div class="container">
-        <div class="header">
-            <h1>🇧🇴 Verificador Serie</h1>
-            <p>Los números de serie inhabilitados se encuentran actualizados mediante comunicado del Banco Central de Bolivia (BCB) a fecha 28/02/2026. <a href="https://www.bcb.gob.bo/webdocs/files_noticias/28feb26%20CP%209%20BCB%20levanta%20inhabilitaci%C3%B3n%20Serie%20B.PDF" target="_blank">Ver comunicado oficial</a>.</p>
+      <div class="header">
+        <h1>🇧🇴 Billete Verificador</h1>
+        <p>
+          Los números de serie inhabilitados por el accidente aéreo suscitado en
+          fecha 27/02/2026 en la ciudad de El Alto - Bolivia se encuentran
+          actualizados mediante comunicado del Banco Central de Bolivia (BCB)
+          ena fecha 28/02/2026.
+          <a
+            href="https://www.bcb.gob.bo/webdocs/files_noticias/28feb26%20CP%209%20BCB%20levanta%20inhabilitaci%C3%B3n%20Serie%20B.PDF"
+            target="_blank"
+            >Ver comunicado oficial</a
+          >.
+        </p>
+      </div>
+
+      <div class="upload-options">
+        <div id="cameraOption" class="upload-option">
+          <span class="upload-icon">📷</span>
+          <h3>Usar Cámara</h3>
+          <p>Escanea un billete</p>
+          <input
+            type="file"
+            id="cameraInput"
+            accept="image/*"
+            capture="environment"
+          />
         </div>
 
-        <div class="upload-options">
-            <div id="cameraOption" class="upload-option">
-                <span class="upload-icon">📷</span>
-                <h3>Usar Cámara</h3>
-                <p>Captura una foto</p>
-                <input type="file" id="cameraInput" accept="image/*" capture="environment">
+        <div id="fileOption" class="upload-option">
+          <span class="upload-icon">🖼️</span>
+          <h3>Seleccionar un Foto</h3>
+          <p>Elige desde tu galería</p>
+          <input type="file" id="fileInput" accept="image/*" />
+        </div>
+      </div>
+
+      <div id="cameraModal" class="camera-modal" style="display: none">
+        <div class="camera-container">
+          <div class="camera-header">
+            <h2>Escanear Billete</h2>
+            <button id="closeCameraBtn" class="close-btn">&times;</button>
+          </div>
+          <div class="camera-preview">
+            <video id="cameraFeed" autoplay></video>
+            <div class="camera-overlay">
+              <div class="camera-frame"></div>
             </div>
-
-            <div id="fileOption" class="upload-option">
-                <span class="upload-icon">🖼️</span>
-                <h3>Seleccionar Foto</h3>
-                <p>Elige de tu galería</p>
-                <input type="file" id="fileInput" accept="image/*">
-            </div>
+          </div>
+          <canvas id="cameraCanvas" style="display: none"></canvas>
+          <div class="camera-buttons">
+            <button id="captureBtn" class="btn-capture">📷 Capturar</button>
+            <button id="switchCameraBtn" class="btn-switch">🔁 Cambiar</button>
+          </div>
         </div>
+      </div>
 
-        <div id="cameraModal" class="camera-modal" style="display: none;">
-            <div class="camera-container">
-                <div class="camera-header">
-                    <h2>Capturar Foto</h2>
-                    <button id="closeCameraBtn" class="close-btn">&times;</button>
-                </div>
-                <div class="camera-preview">
-                    <video id="cameraFeed" autoplay></video>
-                    <div class="camera-overlay">
-                        <div class="camera-frame"></div>
-                    </div>
-                </div>
-                <canvas id="cameraCanvas" style="display: none;"></canvas>
-                <div class="camera-buttons">
-                    <button id="captureBtn" class="btn-capture">📷 Capturar</button>
-                    <button id="switchCameraBtn" class="btn-switch">🔁 Cambiar</button>
-                </div>
-            </div>
-        </div>
+      <div id="selectedFile" class="selected-file">
+        <div class="file-name" id="fileName"></div>
+        <div class="file-size" id="fileSize"></div>
+      </div>
 
-        <div id="selectedFile" class="selected-file">
-            <div class="file-name" id="fileName"></div>
-            <div class="file-size" id="fileSize"></div>
-        </div>
+      <div class="button-group">
+        <button id="uploadBtn" class="btn-upload" disabled>Subir Foto</button>
+        <button id="clearBtn" class="btn-clear">Limpiar</button>
+      </div>
 
-        <div class="button-group">
-            <button id="uploadBtn" class="btn-upload" disabled>Subir Foto</button>
-            <button id="clearBtn" class="btn-clear">Limpiar</button>
-        </div>
+      <div id="loading" class="loading">
+        <div class="spinner"></div>
+        <p>Subiendo foto...</p>
+      </div>
 
-        <div id="loading" class="loading">
-            <div class="spinner"></div>
-            <p>Subiendo foto...</p>
-        </div>
-
-        <div id="responseMessage" class="response-message">
-            <h4 id="responseTitle"></h4>
-            <p id="responseText"></p>
-            <div id="responseMetadata" class="metadata"></div>
-        </div>
+      <div id="responseMessage" class="response-message">
+        <h4 id="responseTitle"></h4>
+        <p id="responseText"></p>
+        <div id="responseMetadata" class="metadata"></div>
+      </div>
     </div>
 
     <footer class="footer">
-        <a href="/about" class="footer-link">Acerca de Nosotros</a>
-        <span class="footer-separator">•</span>
-        <a href="/disclaimer" class="footer-link">Aviso Legal</a>
-        <span class="footer-separator">•</span>
-        <a href="https://github.com/python-la-paz/money-checker" target="_blank" class="footer-link">GitHub</a>
+      <a href="/about" class="footer-link">Acerca de Nosotros</a>
+      <span class="footer-separator">•</span>
+      <a href="/disclaimer" class="footer-link">Aviso Legal</a>
+      <span class="footer-separator">•</span>
+      <a
+        href="https://github.com/python-la-paz/money-checker"
+        target="_blank"
+        class="footer-link"
+        >GitHub</a
+      >
     </footer>
 
     <script src="/static/script.js"></script>
-</body>
+  </body>
 </html>

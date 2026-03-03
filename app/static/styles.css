@@ -1,11 +1,11 @@
 /* Color Variables */
 :root {
     /* Primary Colors */
-    --color-primary: #667eea;
-    --color-primary-dark: #764ba2;
-    --color-primary-light: #f8f9ff;
-    --color-primary-lighter: #f0f2ff;
-    --color-primary-lightest: #e8ebff;
+    --color-primary: #3872b8;
+    --color-primary-dark: #2c5f99;
+    --color-primary-light: #f4f7fb;
+    --color-primary-lighter: #eaf0f7;
+    --color-primary-lightest: #dce8f3;
 
     /* Success Colors */
     --color-success: #28a745;
@@ -56,7 +56,7 @@
 
 body {
     font-family: var(--font-family);
-    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
+    background: #354b62;
     min-height: 100vh;
     display: flex;
     flex-direction: column;
@@ -67,12 +67,13 @@ body {
 .container {
     background: var(--color-white);
     border-radius: var(--border-radius-lg);
-    box-shadow: 0 20px 60px var(--color-shadow-light);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
     max-width: 600px;
     width: 100%;
     padding: 40px;
     animation: slideIn 0.6s ease-out;
     margin: 0 auto;
+    border: 1px solid #d6e0ec;
 }
 
 /* Animations */
@@ -123,7 +124,7 @@ body {
     display: inline-block;
     margin-top: 15px;
     padding: 10px 20px;
-    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
+    background: var(--color-primary);
     color: var(--color-white);
     text-decoration: none;
     border-radius: var(--border-radius-sm);
@@ -132,8 +133,8 @@ body {
 }
 
 .btn-home:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+    background: var(--color-primary-dark);
+    box-shadow: 0 3px 10px rgba(56, 114, 184, 0.2);
 }
 
 /* Upload Options Grid */
@@ -147,7 +148,7 @@ body {
 /* Upload Option Cards */
 .upload-option {
     position: relative;
-    border: 3px dashed var(--color-primary);
+    border: 2px dashed #b0c7e0;
     border-radius: var(--border-radius-md);
     padding: 30px;
     text-align: center;
@@ -194,7 +195,7 @@ input[type="datetime-local"] {
 /* Upload Area */
 .upload-area {
     position: relative;
-    border: 3px dashed var(--color-primary);
+    border: 2px dashed #b0c7e0;
     border-radius: var(--border-radius-md);
     padding: 40px;
     text-align: center;
@@ -267,13 +268,13 @@ button {
 
 /* Upload Button */
 .btn-upload {
-    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
+    background: var(--color-primary);
     color: var(--color-white);
 }
 
 .btn-upload:hover:not(:disabled) {
-    transform: translateY(-2px);
-    box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+    background: var(--color-primary-dark);
+    box-shadow: 0 3px 10px rgba(56, 114, 184, 0.2);
 }
 
 .btn-upload:disabled {
@@ -407,7 +408,7 @@ button {
     justify-content: space-between;
     align-items: center;
     padding: 20px;
-    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
+    background: var(--color-primary);
     color: var(--color-white);
 }
 
@@ -490,13 +491,13 @@ button {
 
 /* Capture Button */
 .btn-capture {
-    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
+    background: var(--color-primary);
     color: var(--color-white);
 }
 
 .btn-capture:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+    background: var(--color-primary-dark);
+    box-shadow: 0 3px 10px rgba(56, 114, 184, 0.2);
 }
 
 /* Switch Camera Button */
@@ -570,7 +571,7 @@ button {
 /* Footer Styles */
 footer.footer {
     background: transparent;
-    color: var(--color-white);
+    color: var(--color-primary-dark);
     padding: 20px;
     text-align: center;
     margin-top: auto;
@@ -578,7 +579,7 @@ footer.footer {
 }
 
 .footer-link {
-    color: var(--color-white);
+    color: var(--color-primary-light);
     text-decoration: none;
     transition: opacity 0.3s ease;
     font-weight: 500;
@@ -590,7 +591,7 @@ footer.footer {
 }
 
 .footer-separator {
-    color: var(--color-white);
+    color: var(--color-primary-dark);
     margin: 0 10px;
     opacity: 0.7;
 }
@@ -610,7 +611,7 @@ footer.footer {
 }
 
 .legal-content h3 {
-    color: var(--color-primary-dark);
+    color: var(--color-primary);
     margin-top: 25px;
     margin-bottom: 15px;
     font-size: 1.3em;
