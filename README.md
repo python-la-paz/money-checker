@@ -23,6 +23,13 @@ La información de series inhabilitadas se actualiza conforme a los comunicados 
 - 🖼️ **Carga desde galería** — Sube imágenes existentes para su análisis
 - 🔍 **OCR de serie** — Lectura asistida del número de serie mediante reconocimiento óptico
 - ✅ **Validación referencial** — Comparación contra los listados publicados por el BCB
+- 🔗 **API REST** — Endpoints públicos construidos con FastAPI, disponibles para integración con aplicaciones de terceros
+
+---
+
+## API Billetes Verificador
+
+Consulta la documentación de la API de forma interactiva completa en: **[bob.pylapaz.org/docs](https://bob.pylapaz.org/docs)**
 
 ---
 
