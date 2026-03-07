@@ -28,6 +28,9 @@ class Config:
     LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
     LOG_DIR = os.getenv("LOG_DIR", "./logs")
 
+    # API Detector
+    API_DETECTOR_URL = os.getenv("API_DETECTOR_URL", None)
+
     @staticmethod
     def init():
         """Initialize configuration"""

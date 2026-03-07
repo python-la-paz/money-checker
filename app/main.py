@@ -1,5 +1,6 @@
 import copy
 import asyncio
+import requests
 from concurrent.futures import ThreadPoolExecutor
 
 from fastapi import FastAPI, HTTPException, UploadFile, File, Request
@@ -19,7 +20,7 @@ _ocr_pool = ThreadPoolExecutor(max_workers=1, thread_name_prefix="ocr")
 
 # File upload configuration
 MAX_FILE_SIZE = 1 * 1024 * 1024  # 1 MB in bytes
-
+API_DETECTOR_URL = os.getenv("API_DETECTOR_URL", None)
 # Initialize database
 db = Database()
 
@@ -102,17 +103,32 @@ async def upload_photo(request: Request, file: UploadFile = File(...)):
             f.write(contents)
             metadata["file_size"] = len(contents)
         # logic to analyze image  and return JSON to storage results and send to frontend for display
-
-        try:
-            loop = asyncio.get_event_loop()
-            result = await loop.run_in_executor(_ocr_pool, analyze_bill, contents)
-        except ValueError as e:
-            raise HTTPException(status_code=400, detail=str(e))
-        except Exception as e:
-            raise HTTPException(
-                status_code=500,
-                detail=f"Error processing the image: {str(e)}",
-            )
+        if API_DETECTOR_URL:
+            try:
+                response = requests.post(
+                    API_DETECTOR_URL,
+                    files={"file": (metadata["filename"], contents, file.content_type)},
+                    timeout=30,
+                )
+                response.raise_for_status()
+                result = response.json()
+            except requests.RequestException as e:
+                logger.error(f"Error calling API Detector: {str(e)}")
+                raise HTTPException(
+                    status_code=500,
+                    detail=f"Error calling API Detector: {str(e)}",
+                )
+        else:
+            try:
+                loop = asyncio.get_event_loop()
+                result = await loop.run_in_executor(_ocr_pool, analyze_bill, contents)
+            except ValueError as e:
+                raise HTTPException(status_code=400, detail=str(e))
+            except Exception as e:
+                raise HTTPException(
+                    status_code=500,
+                    detail=f"Error processing the image: {str(e)}",
+                )
         # Example response structure
         # {
         #  "serials": [
