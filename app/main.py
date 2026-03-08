@@ -160,6 +160,7 @@ async def upload_photo(request: Request, file: UploadFile = File(...)):
         result_storage = copy.deepcopy(result)
         del result_storage["annotated_image_base64"]
         metadata["analysis_result"] = result_storage
+        metadata["api_used"] = bool(API_DETECTOR_URL)
         # Store in MongoDB
         await db.save_upload(metadata)
         result["status"] = "success"
