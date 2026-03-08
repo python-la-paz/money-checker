@@ -20,6 +20,7 @@ services:
       MONGODB_URL: mongodb://admin:change_me_deploy@mongodb:27017/?authSource=admin
       DATABASE_NAME: money_checker
       UPLOAD_DIR: /app/uploads
+      API_DETECTOR_URL: ${API_DETECTOR_URL}
     ports:
       - "8000:8000"
     depends_on:

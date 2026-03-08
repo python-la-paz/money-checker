@@ -107,7 +107,9 @@ async def upload_photo(request: Request, file: UploadFile = File(...)):
             try:
                 response = requests.post(
                     API_DETECTOR_URL,
-                    files={"file": (metadata["filename"], contents, file.content_type)},
+                    files={
+                        "image": (metadata["filename"], contents, file.content_type)
+                    },
                     timeout=30,
                 )
                 response.raise_for_status()
