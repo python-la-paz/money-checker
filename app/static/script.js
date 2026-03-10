@@ -29,6 +29,7 @@ let videoDevices = [];
 let currentDeviceIndex = 0;
 
 // Camera option handlers - open camera via MediaDevices API
+// Accesibilidad: permitir activar por teclado
 cameraOption.addEventListener('click', async () => {
     try {
         if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
@@ -41,6 +42,11 @@ cameraOption.addEventListener('click', async () => {
         cameraInput.click();
     }
 });
+cameraOption.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+        cameraOption.click();
+    }
+});
 
 cameraInput.addEventListener('change', (e) => {
     if (e.target.files.length > 0) {
@@ -50,6 +56,11 @@ cameraInput.addEventListener('change', (e) => {
 
 // File option handlers
 fileOption.addEventListener('click', () => fileInput.click());
+fileOption.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+        fileOption.click();
+    }
+});
 
 fileInput.addEventListener('change', (e) => {
     if (e.target.files.length > 0) {
@@ -61,8 +72,11 @@ fileInput.addEventListener('change', (e) => {
 async function openCameraModal() {
     try {
         cameraModal.style.display = 'flex';
+        cameraModal.setAttribute('aria-live', 'assertive');
+        cameraModal.setAttribute('aria-label', 'Modal de cámara abierto');
         await loadVideoDevices();
         await startCameraStream();
+        closeCameraBtn.focus();
     } catch (error) {
         console.error('Error accessing camera:', error);
         showError('No se pudo acceder a la cámara. Por favor, verifica los permisos.');
@@ -472,6 +486,7 @@ function showError(message) {
     responseTitle.textContent = '❌ Error';
     responseText.textContent = message;
     responseMetadata.innerHTML = '';
+    responseMessage.setAttribute('aria-live', 'assertive');
 }
 
 function formatFileSize(bytes) {

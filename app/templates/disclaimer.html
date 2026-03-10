@@ -1,21 +1,38 @@
 <!doctype html>
-<html lang="es">
+<html
+  lang="es"
+  aria-label="Aviso legal y privacidad"
+  aria-describedby="disclaimer-desc"
+>
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Aviso Legal | 🇧🇴 Billete Verificador</title>
     <link rel="stylesheet" href="/static/styles.css" />
+    <meta
+      name="description"
+      content="Aviso legal y privacidad del proyecto Billete Verificador, accesible para personas no videntes."
+    />
   </head>
 
   <body>
-    <div class="container">
+    <div
+      class="container"
+      role="main"
+      aria-labelledby="disclaimer-title"
+      aria-describedby="disclaimer-desc"
+    >
       <div class="header">
-        <h1>🇧🇴 Billete Verificador</h1>
-        <p>Aviso Legal</p>
-        <a href="/" class="btn-home">🏠 Ir a Inicio</a>
+        <h1 id="disclaimer-title">🇧🇴 Billete Verificador</h1>
+        <p id="disclaimer-desc">Aviso Legal</p>
+        <a href="/" class="btn-home" aria-label="Ir a Inicio">🏠 Ir a Inicio</a>
       </div>
 
-      <div class="legal-content">
+      <div
+        class="legal-content"
+        role="region"
+        aria-label="Aviso legal y privacidad"
+      >
         <h2>Aviso Legal y Privacidad</h2>
 
         <h3>1. Finalidad de la Aplicación</h3>
@@ -35,6 +52,7 @@
           <a
             href="https://www.bcb.gob.bo/webdocs/files_noticias/28feb26%20CP%209%20BCB%20levanta%20inhabilitaci%C3%B3n%20Serie%20B.PDF"
             target="_blank"
+            aria-label="Ver comunicado oficial del Banco Central de Bolivia"
             >Ver comunicado oficial del BCB</a
           >.
         </p>

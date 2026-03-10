@@ -1,16 +1,25 @@
 <!doctype html>
-<html lang="es">
+<html lang="es" aria-label="Página principal" aria-describedby="main-desc">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>🇧🇴 Verificador de Serie</title>
     <link rel="stylesheet" href="/static/styles.css" />
+    <meta
+      name="description"
+      content="Verificador de serie de billetes accesible para personas no videntes."
+    />
   </head>
   <body>
-    <div class="container">
+    <div
+      class="container"
+      role="main"
+      aria-labelledby="main-title"
+      aria-describedby="main-desc"
+    >
       <div class="header">
-        <h1>🇧🇴 Billete Verificador</h1>
-        <p>
+        <h1 id="main-title">🇧🇴 Billete Verificador</h1>
+        <p id="main-desc">
           Los números de serie inhabilitados por el accidente aéreo suscitado en
           fecha 27/02/2026 en la ciudad de El Alto - Bolivia se encuentran
           actualizados mediante comunicado del Banco Central de Bolivia (BCB)
@@ -18,14 +27,25 @@
           <a
             href="https://www.bcb.gob.bo/webdocs/files_noticias/28feb26%20CP%209%20BCB%20levanta%20inhabilitaci%C3%B3n%20Serie%20B.PDF"
             target="_blank"
+            aria-label="Ver comunicado oficial del Banco Central de Bolivia"
             >Ver comunicado oficial</a
           >.
         </p>
       </div>
 
-      <div class="upload-options">
-        <div id="cameraOption" class="upload-option">
-          <span class="upload-icon">📷</span>
+      <div
+        class="upload-options"
+        aria-label="Opciones de carga de imagen"
+        role="region"
+      >
+        <div
+          id="cameraOption"
+          class="upload-option"
+          tabindex="0"
+          role="button"
+          aria-label="Usar cámara para escanear billete"
+        >
+          <span class="upload-icon" aria-hidden="true">📷</span>
           <h3>Usar Cámara</h3>
           <p>Escanea un billete</p>
           <input
@@ -33,77 +53,140 @@
             id="cameraInput"
             accept="image/*"
             capture="environment"
+            aria-label="Seleccionar imagen desde cámara"
           />
         </div>
 
-        <div id="fileOption" class="upload-option">
-          <span class="upload-icon">🖼️</span>
+        <div
+          id="fileOption"
+          class="upload-option"
+          tabindex="0"
+          role="button"
+          aria-label="Seleccionar una foto desde galería"
+        >
+          <span class="upload-icon" aria-hidden="true">🖼️</span>
           <h3>Seleccionar un Foto</h3>
           <p>Elige desde tu galería</p>
-          <input type="file" id="fileInput" accept="image/*" />
+          <input
+            type="file"
+            id="fileInput"
+            accept="image/*"
+            aria-label="Seleccionar imagen desde galería"
+          />
         </div>
       </div>
 
-      <div id="cameraModal" class="camera-modal" style="display: none">
+      <div
+        id="cameraModal"
+        class="camera-modal"
+        style="display: none"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="cameraModalTitle"
+      >
         <div class="camera-container">
           <div class="camera-header">
-            <h2>Escanear Billete</h2>
-            <button id="closeCameraBtn" class="close-btn">&times;</button>
+            <h2 id="cameraModalTitle">Escanear Billete</h2>
+            <button
+              id="closeCameraBtn"
+              class="close-btn"
+              aria-label="Cerrar cámara"
+            >
+              &times;
+            </button>
           </div>
           <div class="camera-preview">
-            <video id="cameraFeed" autoplay></video>
-            <div class="camera-overlay">
+            <video
+              id="cameraFeed"
+              autoplay
+              aria-label="Vista previa de cámara"
+            ></video>
+            <div class="camera-overlay" aria-hidden="true">
               <div class="camera-frame"></div>
             </div>
           </div>
-          <canvas id="cameraCanvas" style="display: none"></canvas>
+          <canvas
+            id="cameraCanvas"
+            style="display: none"
+            aria-label="Captura de imagen"
+          ></canvas>
           <div class="camera-buttons">
-            <button id="captureBtn" class="btn-capture">📷 Capturar</button>
-            <button id="switchCameraBtn" class="btn-switch">🔁 Cambiar</button>
+            <button
+              id="captureBtn"
+              class="btn-capture"
+              aria-label="Capturar imagen"
+            >
+              📷 Capturar
+            </button>
+            <button
+              id="switchCameraBtn"
+              class="btn-switch"
+              aria-label="Cambiar cámara"
+            >
+              🔁 Cambiar
+            </button>
           </div>
         </div>
       </div>
 
-      <div id="selectedFile" class="selected-file">
+      <div
+        id="selectedFile"
+        class="selected-file"
+        aria-label="Archivo seleccionado"
+      >
         <div class="file-name" id="fileName"></div>
         <div class="file-size" id="fileSize"></div>
         <div
           class="preview-container"
           id="previewContainer"
           style="display: none; position: relative"
+          aria-label="Vista previa de imagen seleccionada"
         >
           <img
             id="previewImage"
             class="preview-image"
             style="max-width: 100%; border-radius: 8px"
+            alt="Vista previa del billete seleccionado"
           />
           <div
             id="analyzingOverlay"
             class="analyzing-overlay"
             style="display: none"
+            aria-live="polite"
+            aria-label="Analizando billete"
           >
-            <div class="shimmer-overlay"></div>
+            <div class="shimmer-overlay" aria-hidden="true"></div>
             <div class="analyzing-text">Analizando billete...</div>
           </div>
         </div>
       </div>
 
-      <div id="responseMessage" class="response-message">
+      <div
+        id="responseMessage"
+        class="response-message"
+        role="status"
+        aria-live="polite"
+      >
         <h4 id="responseTitle"></h4>
         <p id="responseText"></p>
         <div id="responseMetadata" class="metadata"></div>
       </div>
     </div>
 
-    <footer class="footer">
-      <a href="/about" class="footer-link">Acerca de Nosotros</a>
-      <span class="footer-separator">•</span>
-      <a href="/disclaimer" class="footer-link">Aviso Legal</a>
-      <span class="footer-separator">•</span>
+    <footer class="footer" role="contentinfo">
+      <a href="/about" class="footer-link" aria-label="Acerca de Nosotros"
+        >Acerca de Nosotros</a
+      >
+      <span class="footer-separator" aria-hidden="true">•</span>
+      <a href="/disclaimer" class="footer-link" aria-label="Aviso Legal"
+        >Aviso Legal</a
+      >
+      <span class="footer-separator" aria-hidden="true">•</span>
       <a
         href="https://github.com/python-la-paz/money-checker"
         target="_blank"
         class="footer-link"
+        aria-label="Repositorio en GitHub"
         >GitHub</a
       >
     </footer>

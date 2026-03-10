@@ -1,21 +1,38 @@
 <!doctype html>
-<html lang="es">
+<html
+  lang="es"
+  aria-label="Acerca de la aplicación"
+  aria-describedby="about-desc"
+>
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Acerca de | 🇧🇴 Billete Verificador</title>
     <link rel="stylesheet" href="/static/styles.css" />
+    <meta
+      name="description"
+      content="Información sobre el proyecto Billete Verificador, accesible para personas no videntes."
+    />
   </head>
 
   <body>
-    <div class="container">
+    <div
+      class="container"
+      role="main"
+      aria-labelledby="about-title"
+      aria-describedby="about-desc"
+    >
       <div class="header">
-        <h1>🇧🇴 Verificador Serie</h1>
-        <p>Acerca de Nosotros</p>
-        <a href="/" class="btn-home">🏠 Ir a Inicio</a>
+        <h1 id="about-title">🇧🇴 Verificador Serie</h1>
+        <p id="about-desc">Acerca de Nosotros</p>
+        <a href="/" class="btn-home" aria-label="Ir a Inicio">🏠 Ir a Inicio</a>
       </div>
 
-      <div class="legal-content">
+      <div
+        class="legal-content"
+        role="region"
+        aria-label="Información sobre el proyecto"
+      >
         <h2>Acerca del Proyecto</h2>
 
         <h3>1. ¿Quiénes somos?</h3>
