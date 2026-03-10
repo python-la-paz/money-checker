@@ -5,9 +5,7 @@ const fileInput = document.getElementById('fileInput');
 const selectedFile = document.getElementById('selectedFile');
 const fileName = document.getElementById('fileName');
 const fileSize = document.getElementById('fileSize');
-const uploadBtn = document.getElementById('uploadBtn');
 const clearBtn = document.getElementById('clearBtn');
-const loading = document.getElementById('loading');
 const responseMessage = document.getElementById('responseMessage');
 const responseTitle = document.getElementById('responseTitle');
 const responseText = document.getElementById('responseText');
@@ -33,11 +31,9 @@ let currentDeviceIndex = 0;
 // Camera option handlers - open camera via MediaDevices API
 cameraOption.addEventListener('click', async () => {
     try {
-        // First try MediaDevices API (modern approach)
         if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
             await openCameraModal();
         } else {
-            // Fallback to file input
             cameraInput.click();
         }
     } catch (error) {
@@ -221,6 +217,11 @@ switchCameraBtn.addEventListener('click', async () => {
 });
 
 async function handleFileSelect(file, { compress = true, maxBytes = 1024 * 1024 } = {}) {
+    // Limpiar resultado previo al seleccionar/capturar una foto
+    responseMessage.classList.remove('show');
+    responseTitle.textContent = '';
+    responseText.textContent = '';
+    responseMetadata.innerHTML = '';
     if (!file.type.startsWith('image/')) {
         showError('Por favor selecciona una imagen');
         return;
@@ -245,7 +246,23 @@ async function handleFileSelect(file, { compress = true, maxBytes = 1024 * 1024 
     fileName.textContent = `Archivo: ${normalizedFile.name}`;
     fileSize.textContent = `Tamaño: ${formatFileSize(normalizedFile.size)}`;
     selectedFile.classList.add('show');
-    uploadBtn.disabled = false;
+
+    // Mostrar vista previa y overlay de análisis
+    const previewContainer = document.getElementById('previewContainer');
+    const previewImage = document.getElementById('previewImage');
+    const analyzingOverlay = document.getElementById('analyzingOverlay');
+    if (previewContainer && previewImage && analyzingOverlay) {
+        previewContainer.style.display = 'block';
+        previewImage.src = URL.createObjectURL(normalizedFile);
+        analyzingOverlay.style.display = 'flex';
+    }
+
+    // Iniciar análisis automáticamente
+    await uploadPhoto();
+    // Ocultar overlay de análisis al terminar
+    if (analyzingOverlay) {
+        analyzingOverlay.style.display = 'none';
+    }
 }
 
 function compressImageFile(file, { maxBytes } = {}) {
@@ -322,16 +339,6 @@ function compressImageFile(file, { maxBytes } = {}) {
     });
 }
 
-clearBtn.addEventListener('click', () => {
-    cameraInput.value = '';
-    fileInput.value = '';
-    selectedFileData = null;
-    selectedFile.classList.remove('show');
-    uploadBtn.disabled = true;
-    responseMessage.classList.remove('show');
-});
-
-uploadBtn.addEventListener('click', uploadPhoto);
 
 async function uploadPhoto() {
     if (!selectedFileData) {
@@ -341,9 +348,6 @@ async function uploadPhoto() {
 
     const formData = new FormData();
     formData.append('file', selectedFileData);
-
-    loading.style.display = 'block';
-    uploadBtn.disabled = true;
 
     try {
         const response = await fetch('/api/upload-photo', {
@@ -364,9 +368,6 @@ async function uploadPhoto() {
         }
     } catch (error) {
         showError(`Error: ${error.message}`);
-    } finally {
-        loading.style.display = 'none';
-        uploadBtn.disabled = !selectedFileData;
     }
 }
 

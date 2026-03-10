@@ -1,3 +1,53 @@
+.shimmer-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border-radius: var(--border-radius-sm);
+    background: linear-gradient(90deg, var(--color-primary) 20%, var(--color-primary-lightest) 40%, var(--color-primary) 60%);
+    background-size: 200% 100%;
+    animation: shimmerMove 1.2s infinite linear;
+    opacity: 0.7;
+    z-index: 1;
+}
+
+@keyframes shimmerMove {
+    0% { background-position: -100% 0; }
+    100% { background-position: 100% 0; }
+}
+
+.analyzing-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+    color: var(--color-white);
+    font-size: 1.3em;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--border-radius-sm);
+    z-index: 2;
+    pointer-events: none;
+    text-shadow: 0 2px 8px var(--color-shadow-light);
+}
+
+.analyzing-text {
+    margin-top: 8px;
+    font-size: 1.2em;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    background: linear-gradient(90deg, var(--color-text-gray) 20%, var(--color-primary-lightest) 40%, var(--color-text-gray) 60%);
+    background-size: 200% 100%;
+    color: transparent;
+    -webkit-background-clip: text;
+    background-clip: text;
+    animation: shimmerMove 1.2s infinite linear;
+}
 /* Color Variables */
 :root {
     /* Primary Colors */
@@ -53,6 +103,24 @@
     padding: 0;
     box-sizing: border-box;
 }
+/*Header Styles*/
+
+.header {
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+.header h1 {
+    color: var(--color-primary);
+    font-size: 2.5em;
+    margin-bottom: 10px;
+    font-weight: 700;
+}
+
+.header p {
+    color: var(--color-text-gray);
+    font-size: 1.1em;
+}
 
 body {
     font-family: var(--font-family);
@@ -103,40 +171,24 @@ body {
 }
 
 /* Header */
-.header {
-    text-align: center;
-    margin-bottom: 40px;
-}
-
-.header h1 {
-    color: var(--color-primary);
-    font-size: 2.5em;
-    margin-bottom: 10px;
-    font-weight: 700;
-}
-
-.header p {
-    color: var(--color-text-gray);
-    font-size: 1.1em;
-}
-
-.btn-home {
-    display: inline-block;
-    margin-top: 15px;
-    padding: 10px 20px;
-    background: var(--color-primary);
-    color: var(--color-white);
-    text-decoration: none;
+.shimmer-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
     border-radius: var(--border-radius-sm);
-    font-weight: 600;
-    transition: all 0.3s ease;
+    background: linear-gradient(90deg, var(--color-primary) 20%, var(--color-primary-lightest) 40%, var(--color-primary) 60%);
+    background-size: 200% 100%;
+    animation: shimmerMove 1.2s infinite linear;
+    opacity: 0.7;
+    z-index: 1;
 }
 
-.btn-home:hover {
-    background: var(--color-primary-dark);
-    box-shadow: 0 3px 10px rgba(56, 114, 184, 0.2);
+@keyframes shimmerMove {
+    0% { background-position: -100% 0; }
+    100% { background-position: 100% 0; }
 }
-
 /* Upload Options Grid */
 .upload-options {
     display: grid;
@@ -371,12 +423,40 @@ button {
 }
 
 .annotated-image {
+        max-width: 100%;
+    height: auto;
+    border-radius: var(--border-radius-sm);
+    box-shadow: 0 4px 8px var(--color-shadow-light);
+    display: inline-block;
+}
+/* Preview Image (igual que annotated-image) */
+.preview-image {
     max-width: 100%;
     height: auto;
     border-radius: var(--border-radius-sm);
     box-shadow: 0 4px 8px var(--color-shadow-light);
     display: inline-block;
 }
+
+    /* Overlay de análisis centrado y consistente */
+.analyzing-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+    color: var(--color-white);
+    font-size: 2em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--border-radius-sm);
+    z-index: 2;
+    pointer-events: none;
+    text-shadow: 0 2px 8px var(--color-shadow-dark);
+}
+
 
 /* Camera Modal */
 .camera-modal {
@@ -509,23 +589,6 @@ button {
 
 .btn-switch:hover {
     background: var(--color-warning-hover);
-}
-
-/* Loading Spinner */
-.loading {
-    display: none;
-    text-align: center;
-    margin: 20px 0;
-}
-
-.spinner {
-    border: 4px solid var(--color-spinner-bg);
-    border-top: 4px solid var(--color-primary);
-    border-radius: 50%;
-    width: 40px;
-    height: 40px;
-    animation: spin 1s linear infinite;
-    margin: 0 auto;
 }
 
 /* Recent Uploads */

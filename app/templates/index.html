@@ -67,16 +67,25 @@
       <div id="selectedFile" class="selected-file">
         <div class="file-name" id="fileName"></div>
         <div class="file-size" id="fileSize"></div>
-      </div>
-
-      <div class="button-group">
-        <button id="uploadBtn" class="btn-upload" disabled>Subir Foto</button>
-        <button id="clearBtn" class="btn-clear">Limpiar</button>
-      </div>
-
-      <div id="loading" class="loading">
-        <div class="spinner"></div>
-        <p>Subiendo foto...</p>
+        <div
+          class="preview-container"
+          id="previewContainer"
+          style="display: none; position: relative"
+        >
+          <img
+            id="previewImage"
+            class="preview-image"
+            style="max-width: 100%; border-radius: 8px"
+          />
+          <div
+            id="analyzingOverlay"
+            class="analyzing-overlay"
+            style="display: none"
+          >
+            <div class="shimmer-overlay"></div>
+            <div class="analyzing-text">Analizando billete...</div>
+          </div>
+        </div>
       </div>
 
       <div id="responseMessage" class="response-message">
