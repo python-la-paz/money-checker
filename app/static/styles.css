@@ -41,7 +41,7 @@
     font-size: 1.2em;
     font-weight: 600;
     letter-spacing: 0.5px;
-    background: linear-gradient(90deg, var(--color-text-gray) 20%, var(--color-primary-lightest) 40%, var(--color-text-gray) 60%);
+    background: linear-gradient(90deg, var(--color-primary-lightest) 20%, var(--color-primary-light) 40%, var(--color-primary-lighter) 60%, var(--color-bg-default) 80%);
     background-size: 200% 100%;
     color: transparent;
     -webkit-background-clip: text;

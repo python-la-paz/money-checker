@@ -381,7 +381,7 @@ function showSuccess(data) {
     if (isValid && serials.length === 0 && Object.keys(validationDetails).length === 0) {
         responseMessage.classList.add('show', 'error');
         responseMessage.classList.remove('success');
-        responseTitle.textContent = '❌ Billete no encontrado';
+        responseTitle.textContent = '❌ No se pudo identificar un billete en la imagen. Verifique que el billete esté visible y enfocado.';
         responseText.textContent = '';
         responseMetadata.innerHTML = '';
         return;
